@@ -1,5 +1,7 @@
 from typing import Optional
 
+import lldb
+
 from pwndbg.bridge.interface import IDbg
 
 
@@ -15,4 +17,18 @@ def bridge_lldb() -> Optional[IDbg]:
 
 
 class LldbImpl(IDbg):
-    pass
+    CMD_REDIRECT_MAPPING = {
+        "set python print-stack full": "",
+        "set python print-stack message": "",
+    }
+
+    def execute(self, cmd: str, /, from_tty: bool = False, to_string: bool = False) -> Optional[str]:
+        if cmd not in self.CMD_REDIRECT_MAPPING or not self.CMD_REDIRECT_MAPPING[cmd]:
+            raise NotImplementedError(f"{cmd} is not implement in lldb version")
+        interp: lldb.SBCommandInterpreter = lldb.debugger.GetCommandInterpreter()
+        result: lldb.SBCommandReturnObject = lldb.SBCommandReturnObject()
+        interp.HandleCommand(cmd, result)
+        if result.Succeeded():
+            return result.GetOutput()
+        else:
+            raise RuntimeError(f"FAIL: {cmd}. Error msg: {result.GetError()}")

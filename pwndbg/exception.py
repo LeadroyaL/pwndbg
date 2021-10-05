@@ -6,8 +6,7 @@ import pdb
 import sys
 import traceback
 
-import gdb
-
+from pwndbg.bridge import dbg
 import pwndbg.color.message as message
 import pwndbg.config
 import pwndbg.memoize
@@ -95,4 +94,4 @@ def update():
     else:
         command = 'set python print-stack message'
 
-    gdb.execute(command, from_tty=True, to_string=True)
+    dbg.execute(command, from_tty=True, to_string=True)

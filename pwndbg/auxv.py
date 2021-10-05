@@ -16,6 +16,7 @@ import pwndbg.qemu
 import pwndbg.regs
 import pwndbg.stack
 import pwndbg.typeinfo
+from pwndbg.bridge.common import DbgMemoryException
 
 example_info_auxv_linux = """
 33   AT_SYSINFO_EHDR      System-supplied DSO's ELF header 0x7ffff7ffa000
@@ -143,7 +144,7 @@ def find_stack_boundary(addr):
             if b'\x7fELF' == pwndbg.memory.read(addr, 4):
                 break
             addr += pwndbg.memory.PAGE_SIZE
-    except gdb.MemoryError:
+    except DbgMemoryException:
         pass
     return addr
 
@@ -163,7 +164,7 @@ def walk_stack():
     if not auxv.get('AT_EXECFN', None):
         try:
             auxv['AT_EXECFN'] = _get_execfn()
-        except gdb.MemoryError:
+        except DbgMemoryException:
             pass
 
     return auxv

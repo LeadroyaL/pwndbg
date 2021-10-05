@@ -13,6 +13,7 @@ import pwndbg.color.message as message
 import pwndbg.commands
 import pwndbg.elf
 import pwndbg.vmmap
+from pwndbg.bridge.common import DbgException
 
 
 def find_module(addr, max_distance):
@@ -82,7 +83,7 @@ def probeleak(address=None, count=0x40, max_distance=0x0, point_to=None, max_ptr
 
     try:
         data = pwndbg.memory.read(address, count, partial=True)
-    except gdb.error as e:
+    except DbgException as e:
         print(message.error(str(e)))
         return
 

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import lldb
 
@@ -32,3 +32,9 @@ class LldbImpl(IDbg):
             return result.GetOutput()
         else:
             raise RuntimeError(f"FAIL: {cmd}. Error msg: {result.GetError()}")
+
+    def read(self, addr: int, count: int, partial: bool = False) -> bytearray:
+        pass
+
+    def write(self, addr: int, data: Union[str, bytes, bytearray]):
+        pass

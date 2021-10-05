@@ -16,6 +16,7 @@ import pwndbg.disasm
 import pwndbg.emu.emulator
 import pwndbg.memory
 import pwndbg.regs
+from pwndbg.bridge.common import DbgMemoryException
 
 
 def parse_consts(u_consts):
@@ -223,7 +224,7 @@ class Emulator:
         try:
             data = pwndbg.memory.read(page, size)
             data = bytes(data)
-        except gdb.MemoryError:
+        except DbgMemoryException:
             debug("Could not map page %#x during emulation! [exception]" % page)
             return False
 

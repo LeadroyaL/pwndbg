@@ -9,10 +9,12 @@ from builtins import bytes
 
 import gdb
 
+from pwndbg.bridge import dbg
 import pwndbg.arch
 import pwndbg.events
 import pwndbg.qemu
 import pwndbg.typeinfo
+from pwndbg.bridge.common import DbgMemoryException
 
 PAGE_SIZE = 0x1000
 PAGE_MASK = ~(PAGE_SIZE-1)
@@ -20,51 +22,11 @@ MMAP_MIN_ADDR = 0x8000
 
 
 def read(addr, count, partial=False):
-    """read(addr, count, partial=False) -> bytearray
+    return dbg.read(addr, count, partial)
 
-    Read memory from the program being debugged.
 
-    Arguments:
-        addr(int): Address to read
-        count(int): Number of bytes to read
-        partial(bool): Whether less than ``count`` bytes can be returned
-
-    Returns:
-        :class:`bytearray`: The memory at the specified address,
-        or ``None``.
-    """
-    result = b''
-    count = max(int(count), 0)
-
-    try:
-        result = gdb.selected_inferior().read_memory(addr, count)
-    except gdb.error as e:
-        if not partial:
-            raise
-
-        if not hasattr(e, 'message'):
-            e.message=str(e)
-
-        stop_addr = int(e.message.split()[-1], 0)
-        if stop_addr != addr:
-            return read(addr, stop_addr-addr)
-
-        # QEMU will return the start address as the failed
-        # read address.  Try moving back a few pages at a time.
-        stop_addr = addr + count
-
-        # Move the stop address down to the previous page boundary
-        stop_addr &= PAGE_MASK
-        while stop_addr > addr:
-            result = read(addr, stop_addr-addr)
-
-            if result:
-                return result
-
-            # Move down by another page
-            stop_addr -= PAGE_SIZE
-
-    return bytearray(result)
+def write(addr, data):
+    return dbg.write(addr, data)
 
 
 def readtype(gdb_type, addr):
@@ -81,22 +43,6 @@ def readtype(gdb_type, addr):
         :class:`int`
     """
     return int(gdb.Value(addr).cast(gdb_type.pointer()).dereference())
-
-
-def write(addr, data):
-    """write(addr, data)
-
-    Writes data into the memory of the process being debugged.
-
-    Arguments:
-        addr(int): Address to write
-        data(str,bytes,bytearray): Data to write
-    """
-    if isinstance(data, str):
-        data = bytes(data, 'utf8')
-
-    gdb.selected_inferior().write_memory(addr, data)
-
 
 def peek(address):
     """peek(address) -> str
@@ -339,7 +285,7 @@ def find_upper_boundary(addr, max_pages=1024):
             # (this is most likely redundant, but its ok to keep it?)
             if addr > pwndbg.arch.ptrmask:
                 return pwndbg.arch.ptrmask
-    except gdb.MemoryError:
+    except DbgMemoryException:
         pass
     return addr
 
@@ -361,7 +307,7 @@ def find_lower_boundary(addr, max_pages=1024):
             if addr < 0:
                 return 0
 
-    except gdb.MemoryError:
+    except DbgMemoryException:
         addr += pwndbg.memory.PAGE_SIZE
     return addr
 

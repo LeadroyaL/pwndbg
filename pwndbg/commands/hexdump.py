@@ -10,6 +10,7 @@ import pwndbg.config
 import pwndbg.hexdump
 import pwndbg.memory
 import pwndbg.regs
+from pwndbg.bridge.common import DbgException
 
 pwndbg.config.Parameter('hexdump-width',
                          16,
@@ -71,7 +72,7 @@ def hexdump(address_or_module=None, count=pwndbg.config.hexdump_bytes):
     try:
         data = pwndbg.memory.read(address, count, partial=True)
         hexdump.last_address = (address + count)
-    except gdb.error as e:
+    except DbgException as e:
         print(e)
         return
 
